@@ -1,0 +1,151 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/ros-websocket/ros-websocket.html">
+<link rel="import" href="../bower_components/ros-topic/ros-topic.html">
+<link rel="import" href="../bower_components/ros-rviz/ros-rviz.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="map-annotator-pose.html">
+
+
+<dom-module id="map-annotator-app">
+  <template>
+    <style is="custom-style" include="iron-flex"></style>
+    <style>
+      :host {
+        display: block;
+        box-sizing: border-box;
+        padding: 8px;
+        font-family: sans-serif;
+        height: 100%;
+      }
+
+      #main {
+        height: 100%;
+      }
+
+      #content {
+        height: 100%;
+      }
+
+      #controls {
+        min-width: 300px;
+      }
+
+      map-annotator-pose+map-annotator-pose {
+        margin-top: 8px;
+      }
+    </style>
+    <!-- #<h2>Hello [[prop1]]!</h2> -->
+
+    <ros-websocket auto ros="{{ros}}" url="{{url}}" on-connection="_handleConnection" on-close="_handleClose"
+      on-error="_handleError"></ros-websocket>
+
+    <ros-topic auto ros="{{ros}}" topic="map_annotator/pose_names" msg-type="map_annotator/PoseNames"
+      last-message="{{poseNames}}" on-message="_handlePoseNames"></ros-topic>
+
+    <ros-topic auto id="userActions" topic="map_annotator/user_actions" ros="{{ros}}"
+      msg-type="map_annotator/UserAction"></ros-topic>
+
+    <div id="main" class="layout vertical">
+      <h1>Map annotator</h1>
+      <div>{{status}}</div>
+      <div id="content" class="layout horizontal">
+        <div id="controls">
+          <h2>Poses</h2>
+          <template is="dom-repeat" items="[[poseNames.posenames]]">
+            <map-annotator-pose ros="[[ros]]" pose-name="[[item]]"></map-annotator-pose>
+          </template>
+          <paper-button raised on-tap="_handleCreatePose">Create Pose</paper-button>
+        </div>
+        <ros-rviz id="rviz" ros="[[ros]]" class="flex"></ros-rviz>
+      </div>
+    </div>
+
+    <!-- <h1>Map Annotator</h1>
+  [[status]]
+  <paper-button raised on-tap="_handleCreatePose">Create Pose</paper-button>
+
+  <h2>Poses</h2>
+  <template is="dom-repeat" items="[[poseNames.posenames]]">
+    <map-annotator-pose ros="[[ros]]" pose-name="[[item]]"></map-annotator-pose>
+  </template> -->
+
+
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class MapAnnotatorApp extends Polymer.Element {
+      static get is() { return 'map-annotator-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'map-annotator-app'
+          }
+        };
+      }
+
+
+      _handleConnection() {
+        this.status = 'Connected to the websocket server.';
+        console.log(this.status);
+      }
+      _handleClose() {
+        this.status = 'Closed connection to the websocket server.';
+        console.log(this.status);
+      }
+      _handleError() {
+        this.status = 'Error connecting to the websocket server.';
+        console.log(this.status);
+      }
+      _handlePoseNames(evt) {
+        var msg = evt.detail;
+        console.log('Pose list: ', msg);
+      }
+      _handleCreatePose() {
+        let userInput = prompt("Please enter your pose name:", "default");
+        if (userInput === null) {
+          // The user pressed the Cancel button
+          console.log("User canceled the prompt.");
+        } else {
+          // The user provided input
+          console.log("New Pose Name:", userInput);
+          var msg = {
+            command: 'create',
+            name: userInput
+          };
+          this.$.userActions.publish(msg);
+        }
+      }
+
+      ready() {
+        super.ready();
+        // Fetch the configuration from the 'config.json' file
+        fetch("config/config.json")
+          .then((response) => {
+            // Check if the response is okay (status code 200)
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Parse the JSON response
+            return response.json();
+          })
+          .then((config) => {
+            // Set the configuration
+            this.$.rviz.config = config;
+          })
+          .catch((error) => {
+            console.error("Error fetching configuration:", error);
+          });
+      }
+    }
+
+
+    window.customElements.define(MapAnnotatorApp.is, MapAnnotatorApp);
+  </script>
+</dom-module>

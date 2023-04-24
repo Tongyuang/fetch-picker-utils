@@ -1,0 +1,7 @@
+{
+  "name": "web-teleop",
+  "short_name": "web-teleop",
+  "description": "web app to use teleop to control fetch robot",
+  "start_url": "/",
+  "display": "standalone"
+}

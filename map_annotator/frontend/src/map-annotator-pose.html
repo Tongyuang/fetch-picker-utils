@@ -1,0 +1,101 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/ros-topic/ros-topic.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<dom-module id="map-annotator-pose">
+  <template>
+    <style>
+      paper-button.custom {
+        --paper-button-ink-color: var(--paper-pink-a200);
+        /* These could also be individually defined for each of the
+          specific css classes, but we'll just do it once as an example */
+        --paper-button-flat-keyboard-focus: {
+          background-color: var(--paper-pink-a200) !important;
+          color: white !important;
+        };
+        --paper-button-raised-keyboard-focus: {
+          background-color: var(--paper-pink-a200) !important;
+          color: white !important;
+        };
+      }
+      paper-button.custom:hover {
+        background-color: var(--paper-indigo-100);
+      }
+      paper-button.red {
+        background-color: var(--paper-red-500);
+        color: white;
+      }
+      paper-button.green {
+        background-color: var(--paper-green-500);
+        color: white;
+      }
+
+      paper-button.indigo {
+        background-color: var(--paper-indigo-500);
+        color: white;
+      }
+    </style>
+    
+    <ros-topic
+        auto
+        id="userActions"
+        topic="map_annotator/user_actions"
+        ros="{{ros}}"
+        msg-type="map_annotator/UserAction"
+    ></ros-topic>
+    
+    [[poseName]]
+    <br>
+    <paper-button raised class="custom green" on-tap="_handleGoto">Go to</paper-button>
+    <paper-button raised class="custom red"on-tap="_handleDelete">Delete</paper-button>
+    <paper-button raised class="custom indigo"on-tap="_handleRename">Rename</paper-button>
+
+
+  </template>
+
+  <script>
+    class MapAnnotatorPose extends Polymer.Element {
+      static get is() { return 'map-annotator-pose'; }
+      static get properties() {
+        return {
+          poseName: String,
+          ros: Object
+        };
+      }
+      _handleDelete(evt) {
+        console.log('Deleting', this.poseName);
+        var msg = {
+            command: 'delete',
+            name: this.poseName
+          };     
+        this.$.userActions.publish(msg);
+      }
+      _handleGoto(evt) {
+        console.log('Go to', this.poseName);
+        var msg = {
+            command: 'goto',
+            name: this.poseName
+          };     
+        this.$.userActions.publish(msg);
+      }
+      _handleRename(evt) {
+        console.log('Renaming', this.poseName);
+        let userInput = prompt("Please enter your pose name:", "default");
+        if (userInput === null) {
+          // The user pressed the Cancel button
+          console.log("User canceled the prompt.");
+        } else {
+          // The user provided input
+          console.log("New Pose Name:", userInput);
+          var msg = {
+            command: 'rename',
+            name:this.poseName,
+            updated_name: userInput
+          };
+          this.$.userActions.publish(msg);
+        }
+      }
+    }
+    window.customElements.define(MapAnnotatorPose.is, MapAnnotatorPose);
+  </script>
+</dom-module>

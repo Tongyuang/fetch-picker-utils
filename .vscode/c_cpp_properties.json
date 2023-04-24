@@ -1,0 +1,34 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/yuangtong/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/yuangtong/catkin_ws/src/fetch-picker/ar_track_alvar/ar_track_alvar/include/**",
+        "/home/yuangtong/catkin_ws/src/beginner_tutorials/include/**",
+        "/home/yuangtong/catkin_ws/src/fetch_ros/fetch_depth_layer/include/**",
+        "/home/yuangtong/catkin_ws/src/fetch-picker/fetch_gazebo/fetch_gazebo/include/**",
+        "/home/yuangtong/catkin_ws/src/fetch_ros/fetch_ikfast_plugin/include/**",
+        "/home/yuangtong/catkin_ws/src/global_planner/include/**",
+        "/home/yuangtong/catkin_ws/src/fetch-picker/madmux/include/**",
+        "/home/yuangtong/catkin_ws/src/robot_controllers/robot_controllers/include/**",
+        "/home/yuangtong/catkin_ws/src/robot_controllers/robot_controllers_interface/include/**",
+        "/home/yuangtong/catkin_ws/src/fetch-picker/simple_grasping/include/**",
+        "/home/yuangtong/catkin_ws/src/turtlebot3_simulations/turtlebot3_fake/include/**",
+        "/home/yuangtong/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/include/**",
+        "/home/yuangtong/catkin_ws/src/turtlebot3/turtlebot3_slam/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

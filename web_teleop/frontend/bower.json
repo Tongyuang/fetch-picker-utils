@@ -1,0 +1,32 @@
+{
+  "name": "web-teleop",
+  "description": "web app to use teleop to control fetch robot",
+  "main": "index.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0",
+    "ros-websocket": "jstnhuang/ros-websocket#^4.0.0",
+    "ros-topic": "jstnhuang/ros-topic#^1.0.0",
+    "ros-service": "jstnhuang/ros-service#^2.0.1",
+    "paper-button": "PolymerElements/paper-button#^2.0.0",
+    "paper-slider": "PolymerElements/paper-slider#^2.0.0"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0"
+  },
+  "resolutions": {
+    "ros-websocket": "^3.0.0"
+  },
+  "authors": [
+    "Yuang Tong <yuangtong1999@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
