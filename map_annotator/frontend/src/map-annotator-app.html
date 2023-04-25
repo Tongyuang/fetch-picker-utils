@@ -45,6 +45,10 @@
 
     <ros-topic auto id="userActions" topic="map_annotator/user_actions" ros="{{ros}}"
       msg-type="map_annotator/UserAction"></ros-topic>
+<!--     
+    <ros-topic auto ros="{{ros}}" id="markersTopic" topic="/map_annotator/map_poses" 
+      msg-type="visualization_msgs/InteractiveMarkerUpdate" last-message="{{markers}}"></ros-topic> -->
+
 
     <div id="main" class="layout vertical">
       <h1>Map annotator</h1>
@@ -60,16 +64,6 @@
         <ros-rviz id="rviz" ros="[[ros]]" class="flex"></ros-rviz>
       </div>
     </div>
-
-    <!-- <h1>Map Annotator</h1>
-  [[status]]
-  <paper-button raised on-tap="_handleCreatePose">Create Pose</paper-button>
-
-  <h2>Poses</h2>
-  <template is="dom-repeat" items="[[poseNames.posenames]]">
-    <map-annotator-pose ros="[[ros]]" pose-name="[[item]]"></map-annotator-pose>
-  </template> -->
-
 
   </template>
 
@@ -138,6 +132,7 @@
           .then((config) => {
             // Set the configuration
             this.$.rviz.config = config;
+            // this.$.rviz.addMarkers(this.markers);
           })
           .catch((error) => {
             console.error("Error fetching configuration:", error);
