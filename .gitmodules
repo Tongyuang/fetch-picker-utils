@@ -1,0 +1,3 @@
+[submodule "interactive_marker_proxy"]
+	path = interactive_marker_proxy
+	url = git@github.com:RobotWebTools/interactive_marker_proxy.git
