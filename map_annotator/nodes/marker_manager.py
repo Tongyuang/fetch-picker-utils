@@ -24,11 +24,11 @@ class MarkerManager(MarkerServer):
     def __init__(self):
         super().__init__()
         self._posSub = rospy.Subscriber("map_annotator/pose_names", Poses, self._positionCallback)
-        self._actionPub = rospy.Publisher("/map_annotator/user_actions", UserAction, queue_size=1)
+        self._actionPub = rospy.Publisher("/map_annotator/user_actions", UserAction, queue_size=10)
         
     def _positionCallback(self,msg):
         '''
-        The callback function for user action
+        The callback function for pose_names
         '''
         if len(msg.posenames) > len(self.poselist):
             # add poses
@@ -43,6 +43,12 @@ class MarkerManager(MarkerServer):
                 if name not in msg.posenames:
                     self.deleteMarker(name)
         
+        else:
+            for (posename,posevalue) in zip(msg.posenames,msg.poses):
+                if posevalue == self.server.get(posename).pose:
+                    continue
+                self.updateMarker(posename,posevalue,self.HandleRvizInput)
+                    
                     
     def HandleRvizInput(self,input):
         if input.event_type == InteractiveMarkerFeedback.MOUSE_UP:

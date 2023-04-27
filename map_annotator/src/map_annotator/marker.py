@@ -27,7 +27,8 @@ import tf.transformations as tft
 class MarkerServer():
     def __init__(self):
         self.server = InteractiveMarkerServer("/map_annotator/map_poses")
-        self.fixed_frame = "map" # map or odom
+        
+        self.fixed_frame = "map" # /map or /odom
         self.poselist = []
         
         
@@ -135,6 +136,12 @@ class MarkerServer():
     
     def deleteMarker(self,posename):
         if self.server.erase(posename):
+            self.server.applyChanges()
+        
+    def updateMarker(self,posename,pose,controlfunc):
+        # self.deleteMarker(posename)
+        # self.addMarker(posename,pose,controlfunc)
+        if self.server.setPose(posename,pose):
             self.server.applyChanges()
        
     def HandleRvizInput(self,input):

@@ -9,7 +9,7 @@
   <!-- <node pkg="collada_web_server" type="run_caddy.bash" name="collada_caddy" cwd="node" /> -->
   <node name="interactive_marker_proxy" pkg="interactive_marker_proxy" type="proxy">
     <remap from="topic_ns" to="/map_annotator/map_poses" />
-    <remap from="target_frame" to="/odom" />
+    <remap from="target_frame" to="/map" />
   </node>
 
 </launch>

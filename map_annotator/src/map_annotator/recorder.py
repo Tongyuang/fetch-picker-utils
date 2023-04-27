@@ -16,7 +16,7 @@ from collections import defaultdict
 import copy
 
 # msg
-from geometry_msgs.msg import PoseWithCovarianceStamped,PoseStamped # this is the position messages used                                                                            
+from geometry_msgs.msg import PoseWithCovarianceStamped,PoseStamped,Pose # this is the position messages used                                                                            
                                                                                                        
 class PoseRecorder():                                                                        
     """Listens to /amcl to record the pose of the robot                       
@@ -75,13 +75,20 @@ class PoseRecorder():
             poselist.append(self._poserecord[name])
         return poselist
     
-    def AddPose(self,name):
+    def AddPose(self,name,pose = None):
         '''
         Save the robot's current pose as <name>. Overwrites if <name> already exists.
+        Note: cannot get current pose on webapp, use origin instead
+        para name: pose name
+        para pose: Pose()
         '''
-        self._GetCurrentPos()
-        pose = copy.deepcopy(self._LatestPos)
+        #self._GetCurrentPos()
+        #pose = copy.deepcopy(self._LatestPos)
+        if pose == None:
+            pose = Pose()
+            pose.orientation.w = 1
         self._poserecord[name] = pose
+        
     
     def DelPose(self,name):
         '''
