@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  geometry_msgs
 )
 set(PYTHON_EXECUTABLE "/usr/miniconda3/bin/python")
 ## System dependencies are found with CMake's conventions
@@ -50,7 +51,7 @@ catkin_python_setup()
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  PoseNames.msg
+  Poses.msg
   UserAction.msg
 )
 
@@ -72,6 +73,8 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
+  geometry_msgs
+  #geometry_msgs/Pose
 )
 
 ################################################

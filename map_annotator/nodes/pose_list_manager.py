@@ -9,7 +9,7 @@
 '''
 
 import rospy
-from map_annotator.msg import PoseNames,UserAction
+from map_annotator.msg import Poses,UserAction
 from map_annotator import PoseRecorder
 
 class PoseManager(PoseRecorder):
@@ -21,12 +21,12 @@ class PoseManager(PoseRecorder):
     def __init__(self):
         super().__init__()
         self._actionSub = rospy.Subscriber("/map_annotator/user_actions", UserAction, self._actionCallback)
-        
+
     def _actionCallback(self,msg):
         '''
         The callback function for user action
         '''
-        assert msg.command in ['create','goto','delete','rename']
+        assert msg.command in ['create','goto','delete','rename','relocate']
         
         if msg.command == 'create':
             # create a new pos
@@ -43,6 +43,10 @@ class PoseManager(PoseRecorder):
         elif msg.command == "rename":
             # rename pos
             self._poserecord[msg.updated_name] = self._poserecord.pop(msg.name)
+            
+        elif msg.command == "relocate":
+            # relocate
+            self._poserecord[msg.name] = msg.updated_pose
         
         
 
@@ -57,11 +61,11 @@ def wait_for_time():
 
 
 def main():
-    rospy.init_node('map_annotator')
+    rospy.init_node('map_annotator_pose_list_manager')
     wait_for_time()
     
     annotator_pub = rospy.Publisher('map_annotator/pose_names',
-                                PoseNames,queue_size=1,latch=True)
+                                Poses,latch=True,queue_size=1)
     
 
     manager = PoseManager()
@@ -69,11 +73,10 @@ def main():
 
     rate = rospy.Rate(2)
     while not rospy.is_shutdown():
-        # get pos list
-        pos_list = manager.ListPose()
         # create a message
-        message = PoseNames()
-        message.posenames = pos_list
+        message = Poses()
+        message.posenames = manager.ListPoseName()
+        message.poses = manager.ListPoseValue()
         # send message
         annotator_pub.publish(message)
         # log

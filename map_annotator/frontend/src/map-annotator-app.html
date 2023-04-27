@@ -40,7 +40,7 @@
     <ros-websocket auto ros="{{ros}}" url="{{url}}" on-connection="_handleConnection" on-close="_handleClose"
       on-error="_handleError"></ros-websocket>
 
-    <ros-topic auto ros="{{ros}}" topic="map_annotator/pose_names" msg-type="map_annotator/PoseNames"
+    <ros-topic auto ros="{{ros}}" topic="map_annotator/pose_names" msg-type="map_annotator/Poses"
       last-message="{{poseNames}}" on-message="_handlePoseNames"></ros-topic>
 
     <ros-topic auto id="userActions" topic="map_annotator/user_actions" ros="{{ros}}"

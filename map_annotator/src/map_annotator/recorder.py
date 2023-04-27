@@ -32,7 +32,6 @@ class PoseRecorder():
         # create a publisher
         self._RecordPub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=1)
         
-        #self._RecordSub = rospy.Subscriber('/amcl_pose',PoseWithCovarianceStamped,self._RecordCallback)
         
         
         
@@ -51,9 +50,6 @@ class PoseRecorder():
                 self._poserecord = pickle.load(rf)     
                 rf.close()  
         
-    # def _RecordCallback(self,msg):
-    #     # store the latest pos
-    #     self._LatestPos = msg.pose.pose
     
     def _GetCurrentPos(self):
         try:
@@ -62,12 +58,22 @@ class PoseRecorder():
         except:
             rospy.logerr('Cannot receive message from /acml_pose topic.')
                                              
-    def ListPose(self):
+    def ListPoseName(self):
         '''
         list the names of all the position stored
         '''
         namelist = list(self._poserecord.keys())
         return namelist
+    
+    def ListPoseValue(self):
+        '''
+        list the values of all the position stored
+        '''
+        posenames = self.ListPoseName()
+        poselist = []
+        for name in posenames:
+            poselist.append(self._poserecord[name])
+        return poselist
     
     def AddPose(self,name):
         '''

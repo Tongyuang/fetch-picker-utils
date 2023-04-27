@@ -16,45 +16,26 @@ from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, 
 from visualization_msgs.msg import Marker
 
 
-from std_msgs.msg import ColorRGBA
-from geometry_msgs.msg import Point,PoseWithCovarianceStamped
+from std_msgs.msg import ColorRGBA,Header
+from geometry_msgs.msg import Point,PoseWithCovarianceStamped,Quaternion
 from nav_msgs.msg import Odometry
 
 import copy
 import math
 import tf.transformations as tft
 
-class MyInteractiveMarker():
+class MarkerServer():
     def __init__(self):
-        #self.server = InteractiveMarkerServer("simple_marker")
         self.server = InteractiveMarkerServer("/map_annotator/map_poses")
-        # markers' distance to the robot
-        self._markerDistance = 1
-        self._robotPrevPosition = Odometry().pose.pose
-        self._markerlist = []
         self.fixed_frame = "map" # map or odom
-        # create some interactive markers
-        marker1 = self.CreateInteractiveMarker(position = Point(0,0,0.2),
-                                               color = ColorRGBA(r=0.2, g=0.45, b=0.9, a=1.0),
-                                               name = 'nm',
-                                               description = 'desc')
-        self._markerlist.append(marker1)
+        self.poselist = []
         
-        for marker in self._markerlist:
-            self.server.insert(marker,self.HandleRvizInput)
-            
-        self.server.applyChanges()
-        if self.fixed_frame == "odom":
-            self.sub = rospy.Subscriber("odom", Odometry, self.UpdateMarkerPosition)
-        elif self.fixed_frame == "map":
-            self.sub = rospy.Subscriber("/amcl_pose",PoseWithCovarianceStamped,self.UpdateMarkerPosition)
         
-        # create a driver
-        #self.driver = robot_api.Base()
-    
     def CreateInteractiveMarker(self,
                                 position = Point(x=1, y=0, z=0),
-                                color = ColorRGBA(r=0.2, g=0.45, b=0.9, a=1.0),
+                                orientation = Quaternion(x=0,y=0,z=0,w=1),
+                                arrowcolor = ColorRGBA(r=0.2, g=0.45, b=0.9, a=1.0),
+                                ringcolor = ColorRGBA(r=0.1,g=0.9,b=0.05,a=0.6),
                                 name = 'nm', 
                                 description='desc'):
         '''Create an interactive button
@@ -62,36 +43,64 @@ class MyInteractiveMarker():
             param position: Point from geometry_msgs.msg
             param name: Name of the marker
         '''
-        # create a marker
-        thisMarker = Marker()
+        # create an arrow marker
+        arrowMarker = Marker()
         # set the frame id
-        thisMarker.header.frame_id = self.fixed_frame
+        arrowMarker.header.frame_id = self.fixed_frame
         # set the type of marker
-        thisMarker.type = Marker.ARROW # make it an arrow
+        arrowMarker.type = Marker.ARROW # make it an arrow
         # set the scales
-        thisMarker.scale.x = 0.8
-        thisMarker.scale.y = 0.05
-        thisMarker.scale.z = 0.05
+        arrowMarker.scale.x = 0.5
+        arrowMarker.scale.y = 0.05
+        arrowMarker.scale.z = 0.05
         # set orientation
-        thisMarker.pose.orientation.w = 1
+        arrowMarker.pose.orientation= orientation
         # set position
-        thisMarker.pose.position = position
+        arrowMarker.pose.position = position
         # set color
-        thisMarker.color = color
+        arrowMarker.color = arrowcolor
         
-        # control
-        ThisControl = InteractiveMarkerControl()
+        # create an sylinder marker
+        cylinderMarker = Marker()
+        # set the frame id
+        cylinderMarker.header.frame_id = self.fixed_frame
+        # set the type of marker
+        cylinderMarker.type = Marker.CYLINDER # make it an cylinder
+        # set scale
+        cylinderMarker.scale.x = 2*arrowMarker.scale.x
+        cylinderMarker.scale.y = cylinderMarker.scale.x
+        cylinderMarker.scale.z = 0.01
+        # set color
+        cylinderMarker.color = ringcolor
+        # set position       
+        cylinderMarker.pose.position = position
+        cylinderMarker.pose.orientation= orientation
+        
+        # arrowControl
+        arrowControl = InteractiveMarkerControl()
         # set control mode
-        ThisControl.interaction_mode = InteractiveMarkerControl.MOVE_PLANE
+        arrowControl.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
         # set orientation
-        ThisControl.orientation.w = 1
-        ThisControl.orientation.x = 0
-        ThisControl.orientation.y = 1
-        ThisControl.orientation.z = 0
+        arrowControl.orientation.w = 1
+        arrowControl.orientation.y = 1
         # set it always visible
-        ThisControl.always_visible = True
+        arrowControl.always_visible = True
         # add marker
-        ThisControl.markers.append(thisMarker)
+        arrowControl.markers.append(arrowMarker)
+        
+        
+        # cylinderControl
+        cylinderControl = InteractiveMarkerControl()
+        # set control mode
+        cylinderControl.interaction_mode = InteractiveMarkerControl.MOVE_PLANE
+        # set orientation
+        cylinderControl.orientation.w = 1
+        cylinderControl.orientation.y = 1
+        # set it always visible
+        cylinderControl.always_visible = True
+        # add marker
+        cylinderControl.markers.append(cylinderMarker)
+                
         
         # create an interactive marker
         ThisInteractiveMarker = InteractiveMarker()
@@ -105,89 +114,39 @@ class MyInteractiveMarker():
         ThisInteractiveMarker.description = description
         
         # set orientation
-        ThisInteractiveMarker.pose.orientation.w = 1
+        ThisInteractiveMarker.pose.orientation = orientation
         # set scale
         ThisInteractiveMarker.scale = 1
         # set position
         ThisInteractiveMarker.pose.position = position
         # add control method
-        ThisInteractiveMarker.controls.append(ThisControl)
+        ThisInteractiveMarker.controls.append(arrowControl)
+        ThisInteractiveMarker.controls.append(cylinderControl)
         
         return ThisInteractiveMarker
 
-    def UpdateMarkerPosition(self,msg):
-        '''This function subscribes the either /odom(for fixed_frame=odom) or /amcl(map) 
-            topic and update the markers' position
-            It will work as a callback function
-        '''
-        now_pos = msg.pose.pose
-        robot_position = now_pos.position
-        robot_orientation = now_pos.orientation
-
-        _r = self._cal_radian(self._robotPrevPosition.orientation) - self._cal_radian(robot_orientation)
-        
-
-        # new orientation equals robot orientation
-        # update marker positions
-        for marker in self._markerlist:
-            marker.pose.position = self._cal_new_pos(marker.pose.position,
-                                                     self._robotPrevPosition.position,
-                                                     robot_position,
-                                                     _r)
-            #print(marker.pose.position)
-            marker.pose.orientation = robot_orientation
-            #self.server.insert(marker,self.HandleRvizInput)
-            
-            
-            self.server.setPose(marker.name, marker.pose)
-        # apply changes
+    def addMarker(self,posename,pose,controlfunc):
+        marker = self.CreateInteractiveMarker(position = pose.position,
+                                                orientation = pose.orientation,
+                                                name = posename,
+                                                description = posename)
+        self.server.insert(marker,controlfunc)
         self.server.applyChanges()
-        # update position
-        self._robotPrevPosition = copy.deepcopy(now_pos)
+    
+    def deleteMarker(self,posename):
+        if self.server.erase(posename):
+            self.server.applyChanges()
        
     def HandleRvizInput(self,input):
         # handles rviz input
-        if (input.event_type == InteractiveMarkerFeedback.BUTTON_CLICK):
-            # switch marker name
-            if input.marker_name == 'cubeforward':
-                self.driver.go_forward(0.5)
-            elif input.marker_name == 'cubeleft':
-                self.driver.turn(0.1)
-            elif input.marker_name == 'cubebackward':
-                self.driver.go_forward(-0.5)
-            elif input.marker_name == 'cuberight':
-                self.driver.turn(-0.1)               
-            rospy.loginfo(input.marker_name + ' was clicked.')
-        else:
-            rospy.loginfo(input.marker_name)
-            rospy.loginfo(input.pose)
-            rospy.loginfo('Cannot handle this InteractiveMarker event')
+        if input.event_type == InteractiveMarkerFeedback.MOUSE_UP:
+            name = input.marker_name
+            pose = input.pose
             
-    def _cal_radian(self,quat):
-        # calculate the radian given a quat
-        mat = tft.quaternion_matrix([quat.x, quat.y, quat.z, quat.w])
-        
-        return math.atan2(mat[0,0], mat[1,0])
+            rospy.loginfo("Changing marker {} to new position:({},{})".format(
+                name,pose.position.x,pose.position.y
+            ))
 
-    def _cal_new_pos(self,marker_origin,robot_origin, robot_new,gamma):
-        new_marker_pos = copy.deepcopy(marker_origin)
-        # update the vector after moving
-        new_marker_pos.x += robot_new.x - robot_origin.x
-        new_marker_pos.y += robot_new.y - robot_origin.y
-        # calculate delta gamma
-        rotate_vector = Point()
-        rotate_vector.x = robot_new.x - new_marker_pos.x 
-        rotate_vector.y = robot_new.y - new_marker_pos.y
-        # rotate_vector rotates gamma
-        new_rotate_vector = Point()
-        new_rotate_vector.x = math.cos(gamma)*rotate_vector.x - math.sin(gamma)*rotate_vector.y
-        new_rotate_vector.y = math.sin(gamma)*rotate_vector.x + math.cos(gamma)*rotate_vector.y
-        # update the vector after rotating
-        new_marker_pos.x = robot_new.x - new_rotate_vector.x
-        new_marker_pos.y = robot_new.y - new_rotate_vector.y
-        
-        
-        return new_marker_pos
     
     
 def wait_for_time():                                              
@@ -199,7 +158,7 @@ def wait_for_time():
 def main():
     rospy.init_node('Interactive_Marker_demo')
     wait_for_time()
-    Marker = MyInteractiveMarker()
+    Marker = MarkerServer()
     rospy.sleep(0.5)
     rospy.spin()
     
